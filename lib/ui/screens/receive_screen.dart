@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../theme/app_colors.dart';
+import '../widgets/app_snackbar.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/gradient_scaffold.dart';
 import '../widgets/neon_button.dart';
@@ -100,21 +101,10 @@ class ReceiveScreen extends StatelessWidget {
                                       ),
                                     );
                                     if (context.mounted) {
-                                      ScaffoldMessenger.of(
+                                      AppSnackBar.show(
                                         context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: const Text(
-                                            'Address copied!',
-                                          ),
-                                          backgroundColor: AppColors.charcoal,
-                                          behavior: SnackBarBehavior.floating,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                        ),
+                                        message: 'Address copied!',
+                                        type: SnackBarType.success,
                                       );
                                     }
                                   },
@@ -145,15 +135,10 @@ class ReceiveScreen extends StatelessWidget {
                       const ClipboardData(text: MockData.walletAddress),
                     );
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('Address copied to clipboard!'),
-                          backgroundColor: AppColors.charcoal,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
+                      AppSnackBar.show(
+                        context,
+                        message: 'Address copied to clipboard!',
+                        type: SnackBarType.success,
                       );
                     }
                   },

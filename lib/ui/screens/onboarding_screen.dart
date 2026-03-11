@@ -1,3 +1,4 @@
+import 'package:crypto_wallet/ui/screens/seed_phrase_show_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -107,7 +108,7 @@ class OnboardingScreen extends StatelessWidget {
                 Navigator.of(context).push(
                   PageRouteBuilder(
                     pageBuilder: (context1, animation1, animation2) =>
-                        const DashboardScreen(),
+                        const SeedPhraseShowScreen(),
                     transitionsBuilder: (context2, anim, animation3, child) {
                       return FadeTransition(
                         opacity: CurvedAnimation(
