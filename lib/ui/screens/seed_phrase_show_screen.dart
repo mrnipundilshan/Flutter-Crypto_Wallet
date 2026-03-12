@@ -1,6 +1,7 @@
 import 'package:bip39/bip39.dart' as bip39;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../theme/app_colors.dart';
@@ -36,7 +37,7 @@ class _SeedPhraseShowScreenState extends State<SeedPhraseShowScreen> {
           children: [
             Column(
               children: [
-                SizedBox(height: 30),
+                SizedBox(height: 50),
                 SizedBox(
                   height: 450.h,
                   child: GridView.builder(
@@ -74,7 +75,14 @@ class _SeedPhraseShowScreenState extends State<SeedPhraseShowScreen> {
                   CupertinoIcons.arrow_down_doc,
                   () {
                     isCopied = true;
-                    createSeed();
+                    Clipboard.setData(
+                      ClipboardData(text: seedPhrases.join(" ")),
+                    );
+                    AppSnackBar.show(
+                      context,
+                      message: "Seed phrases copied to clipboard",
+                      type: SnackBarType.success,
+                    );
                   },
                 ),
                 SizedBox(height: 20),

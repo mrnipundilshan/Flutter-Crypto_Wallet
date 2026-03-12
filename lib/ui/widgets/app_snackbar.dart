@@ -13,7 +13,7 @@ class AppSnackBar {
     Duration duration = const Duration(seconds: 3),
   }) {
     final theme = Theme.of(context);
-    
+
     Color backgroundColor;
     IconData icon;
     Color iconColor;
@@ -30,8 +30,8 @@ class AppSnackBar {
         iconColor = Colors.white;
         break;
       case SnackBarType.info:
-      default:
-        backgroundColor = theme.snackBarTheme.backgroundColor ?? AppColors.charcoal;
+        backgroundColor =
+            theme.snackBarTheme.backgroundColor ?? AppColors.charcoal;
         icon = Icons.info_outline;
         iconColor = AppColors.neonCyan;
         break;
@@ -45,10 +45,7 @@ class AppSnackBar {
             Icon(icon, color: iconColor, size: 20),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                message,
-                style: theme.snackBarTheme.contentTextStyle,
-              ),
+              child: Text(message, style: theme.snackBarTheme.contentTextStyle),
             ),
           ],
         ),
