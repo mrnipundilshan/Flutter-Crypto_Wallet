@@ -9,10 +9,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.8
-  flutter_animate: ^4.5.2
-  glassmorphism: ^3.0.0
-  google_fonts: ^8.0.2
   qr_flutter: ^4.1.0
   flutter_screenutil: ^5.9.3
   bip39: ^1.0.6
