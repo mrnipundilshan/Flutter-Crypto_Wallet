@@ -11,4 +11,9 @@ class WalletRepositoryImpl implements WalletRepository {
   Future<Wallet> createWallet() async {
     return await localDataSource.createWallet();
   }
+
+  @override
+  Future<Wallet> importWallet(String mnemonic) async {
+    return await localDataSource.importWallet(mnemonic);
+  }
 }
