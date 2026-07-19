@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../injection_container.dart';
 import 'bloc/create_wallet/create_wallet_bloc.dart';
@@ -46,31 +47,40 @@ class CreateNewWallet extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
                           color: Colors.grey[200],
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(color: Colors.grey[400]!),
                         ),
-                        child: Text(
-                          state.wallet.mnemonic,
-                          style: const TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      const Text(
-                        'Seed Hex:',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      SelectableText(
-                        state.wallet.seed,
-                        style: const TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 12,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                state.wallet.mnemonic,
+                                style: const TextStyle(
+                                  fontFamily: 'monospace',
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.copy),
+                              tooltip: 'Copy Mnemonic Phrase',
+                              onPressed: () {
+                                Clipboard.setData(
+                                  ClipboardData(text: state.wallet.mnemonic),
+                                ).then((_) {
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Mnemonic phrase copied to clipboard'),
+                                    ),
+                                  );
+                                });
+                              },
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 40),
