@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../injection_container.dart';
 import 'bloc/import_wallet/import_wallet_bloc.dart';
 import 'bloc/import_wallet/import_wallet_event.dart';
 import 'bloc/import_wallet/import_wallet_state.dart';
+import 'widgets/mnemonic_card.dart';
+import '../core/theme/app_colors.dart';
 
 class ImportWallet extends StatefulWidget {
   const ImportWallet({super.key});
@@ -24,140 +25,97 @@ class _ImportWalletState extends State<ImportWallet> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return BlocProvider<ImportWalletBloc>(
       create: (_) => sl<ImportWalletBloc>(),
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Import Wallet'),
-        ),
+        appBar: AppBar(title: const Text('Import Wallet')),
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(20),
             child: BlocConsumer<ImportWalletBloc, ImportWalletState>(
               listener: (context, state) {
                 if (state is ImportWalletSuccess) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Wallet imported successfully!'),
-                      backgroundColor: Colors.green,
+                      backgroundColor: AppColors.success,
                     ),
                   );
                 } else if (state is ImportWalletFailure) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(state.message),
-                      backgroundColor: Colors.red,
+                      backgroundColor: AppColors.error,
                     ),
                   );
                 }
               },
               builder: (context, state) {
+                final isLoading = state is ImportWalletLoading;
+
                 return SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Text(
-                        'Enter Mnemonic Phrase',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      Text('Enter Recovery Phrase', style: theme.textTheme.headlineSmall),
                       const SizedBox(height: 8),
-                      const Text(
-                        'Please enter your 12 or 24-word recovery phrase, separated by spaces.',
-                        style: TextStyle(color: Colors.grey),
+                      Text(
+                        'Enter your 12 or 24-word recovery phrase, separated by spaces, to restore your wallet.',
+                        style: theme.textTheme.bodyMedium,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
                       TextField(
                         controller: _mnemonicController,
                         maxLines: 4,
-                        decoration: InputDecoration(
+                        enabled: !isLoading,
+                        style: theme.textTheme.bodyLarge?.copyWith(fontFamily: 'monospace'),
+                        decoration: const InputDecoration(
                           hintText: 'word1 word2 word3 ...',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[100],
                         ),
                       ),
-                      const SizedBox(height: 24),
-                      if (state is ImportWalletLoading)
-                        const Center(child: CircularProgressIndicator())
-                      else
-                        ElevatedButton(
-                          onPressed: () {
-                            final mnemonic = _mnemonicController.text.trim();
-                            if (mnemonic.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Mnemonic phrase cannot be empty.'),
-                                  backgroundColor: Colors.orange,
-                                ),
-                              );
-                              return;
-                            }
-                            context.read<ImportWalletBloc>().add(
-                                  ImportWalletRequested(mnemonic),
-                                );
-                          },
-                          child: const Text('Import Wallet'),
-                        ),
-                      const SizedBox(height: 32),
-                      if (state is ImportWalletSuccess) ...[
-                        const Divider(),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Imported Wallet Details:',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'Mnemonic:',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.grey[400]!),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  state.wallet.mnemonic,
-                                  style: const TextStyle(
-                                    fontFamily: 'monospace',
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.copy),
-                                tooltip: 'Copy Mnemonic Phrase',
-                                onPressed: () {
-                                  Clipboard.setData(
-                                    ClipboardData(text: state.wallet.mnemonic),
-                                  ).then((_) {
-                                    if (!context.mounted) return;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Mnemonic phrase copied to clipboard'),
-                                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: isLoading
+                            ? null
+                            : () {
+                                final mnemonic = _mnemonicController.text.trim();
+                                if (mnemonic.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Recovery phrase cannot be empty.'),
+                                      backgroundColor: AppColors.warning,
+                                    ),
+                                  );
+                                  return;
+                                }
+                                context.read<ImportWalletBloc>().add(
+                                      ImportWalletRequested(mnemonic),
                                     );
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
+                              },
+                        child: isLoading
+                            ? const SizedBox(
+                                height: 22,
+                                width: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text('Import Wallet'),
+                      ),
+                      if (state is ImportWalletSuccess) ...[
+                        const SizedBox(height: 32),
+                        Row(
+                          children: [
+                            const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 22),
+                            const SizedBox(width: 8),
+                            Text('Wallet Restored', style: theme.textTheme.titleMedium),
+                          ],
                         ),
+                        const SizedBox(height: 16),
+                        MnemonicCard(mnemonic: state.wallet.mnemonic),
                       ],
                     ],
                   ),
