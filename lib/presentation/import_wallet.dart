@@ -5,6 +5,7 @@ import 'bloc/import_wallet/import_wallet_bloc.dart';
 import 'bloc/import_wallet/import_wallet_event.dart';
 import 'bloc/import_wallet/import_wallet_state.dart';
 import 'widgets/mnemonic_card.dart';
+import 'set_pin_screen.dart';
 import '../core/theme/app_colors.dart';
 
 class ImportWallet extends StatefulWidget {
@@ -116,6 +117,17 @@ class _ImportWalletState extends State<ImportWallet> {
                         ),
                         const SizedBox(height: 16),
                         MnemonicCard(mnemonic: state.wallet.mnemonic),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => SetPinScreen(wallet: state.wallet),
+                              ),
+                            );
+                          },
+                          child: const Text('Continue'),
+                        ),
                       ],
                     ],
                   ),

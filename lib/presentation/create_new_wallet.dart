@@ -6,7 +6,9 @@ import 'bloc/create_wallet/create_wallet_event.dart';
 import 'bloc/create_wallet/create_wallet_state.dart';
 import 'widgets/mnemonic_card.dart';
 import 'widgets/warning_banner.dart';
+import 'set_pin_screen.dart';
 import '../core/theme/app_colors.dart';
+import '../domain/entities/wallet.dart';
 
 class CreateNewWallet extends StatelessWidget {
   const CreateNewWallet({super.key});
@@ -25,7 +27,7 @@ class CreateNewWallet extends StatelessWidget {
                 if (state is CreateWalletLoading || state is CreateWalletInitial) {
                   return const _LoadingView();
                 } else if (state is CreateWalletSuccess) {
-                  return _SuccessView(mnemonic: state.wallet.mnemonic);
+                  return _SuccessView(wallet: state.wallet);
                 } else if (state is CreateWalletFailure) {
                   return _FailureView(message: state.message);
                 }
@@ -59,9 +61,9 @@ class _LoadingView extends StatelessWidget {
 }
 
 class _SuccessView extends StatelessWidget {
-  final String mnemonic;
+  final Wallet wallet;
 
-  const _SuccessView({required this.mnemonic});
+  const _SuccessView({required this.wallet});
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +97,7 @@ class _SuccessView extends StatelessWidget {
             style: theme.textTheme.bodyMedium,
           ),
           const SizedBox(height: 24),
-          MnemonicCard(mnemonic: mnemonic),
+          MnemonicCard(mnemonic: wallet.mnemonic),
           const SizedBox(height: 16),
           const WarningBanner(
             message: 'Never share your recovery phrase with anyone. '
@@ -103,6 +105,15 @@ class _SuccessView extends StatelessWidget {
           ),
           const SizedBox(height: 32),
           ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => SetPinScreen(wallet: wallet)),
+              );
+            },
+            child: const Text('Continue'),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton(
             onPressed: () {
               context.read<CreateWalletBloc>().add(CreateWalletRequested());
             },
