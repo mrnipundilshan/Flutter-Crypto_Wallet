@@ -7,9 +7,16 @@ import 'bloc/import_wallet/import_wallet_state.dart';
 import 'widgets/mnemonic_card.dart';
 import 'set_pin_screen.dart';
 import '../core/theme/app_colors.dart';
+import '../domain/entities/wallet.dart';
+import '../domain/usecases/save_wallet.dart';
 
 class ImportWallet extends StatefulWidget {
-  const ImportWallet({super.key});
+  /// When true, this screen was opened from an already-unlocked dashboard to
+  /// add another wallet, so it saves the wallet directly instead of routing
+  /// through PIN setup (the PIN is already shared across all wallets).
+  final bool fromDashboard;
+
+  const ImportWallet({super.key, this.fromDashboard = false});
 
   @override
   State<ImportWallet> createState() => _ImportWalletState();
@@ -22,6 +29,29 @@ class _ImportWalletState extends State<ImportWallet> {
   void dispose() {
     _mnemonicController.dispose();
     super.dispose();
+  }
+
+  Future<void> _saveAndReturn(Wallet wallet) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+    try {
+      await sl<SaveWalletUseCase>()(wallet);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to save wallet: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 
   @override
@@ -120,11 +150,15 @@ class _ImportWalletState extends State<ImportWallet> {
                         const SizedBox(height: 24),
                         ElevatedButton(
                           onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => SetPinScreen(wallet: state.wallet),
-                              ),
-                            );
+                            if (widget.fromDashboard) {
+                              _saveAndReturn(state.wallet);
+                            } else {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => SetPinScreen(wallet: state.wallet),
+                                ),
+                              );
+                            }
                           },
                           child: const Text('Continue'),
                         ),

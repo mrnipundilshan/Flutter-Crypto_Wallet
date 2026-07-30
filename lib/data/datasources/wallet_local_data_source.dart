@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:bip39/bip39.dart' as bip39;
+import 'package:crypto/crypto.dart';
 import '../models/wallet_model.dart';
 
 abstract class WalletLocalDataSource {
@@ -11,7 +14,7 @@ class WalletLocalDataSourceImpl implements WalletLocalDataSource {
   Future<WalletModel> createWallet() async {
     final mnemonic = bip39.generateMnemonic();
     final seed = bip39.mnemonicToSeedHex(mnemonic);
-    return WalletModel(mnemonic: mnemonic, seed: seed);
+    return WalletModel(id: _deriveId(seed), name: '', mnemonic: mnemonic, seed: seed);
   }
 
   @override
@@ -22,6 +25,12 @@ class WalletLocalDataSourceImpl implements WalletLocalDataSource {
       throw Exception('Invalid mnemonic phrase');
     }
     final seed = bip39.mnemonicToSeedHex(cleanMnemonic);
-    return WalletModel(mnemonic: cleanMnemonic, seed: seed);
+    return WalletModel(id: _deriveId(seed), name: '', mnemonic: cleanMnemonic, seed: seed);
+  }
+
+  /// Derives a stable wallet identifier from its seed so the same wallet
+  /// always resolves to the same id, letting re-imports be recognized as duplicates.
+  String _deriveId(String seed) {
+    return sha256.convert(utf8.encode(seed)).toString().substring(0, 16);
   }
 }

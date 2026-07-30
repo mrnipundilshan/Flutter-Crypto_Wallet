@@ -1,5 +1,5 @@
 import 'package:crypto_wallet/core/theme/app_theme.dart';
-import 'package:crypto_wallet/presentation/onboarding_screen.dart';
+import 'package:crypto_wallet/presentation/app_root.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'injection_container.dart' as di;
@@ -28,7 +28,7 @@ class CryptoWalletApp extends StatelessWidget {
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
           themeMode: ThemeMode.system,
-          home: const OnboardingScreen(),
+          home: const AppRoot(),
         );
       },
     );

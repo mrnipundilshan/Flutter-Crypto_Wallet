@@ -9,9 +9,15 @@ import 'widgets/warning_banner.dart';
 import 'set_pin_screen.dart';
 import '../core/theme/app_colors.dart';
 import '../domain/entities/wallet.dart';
+import '../domain/usecases/save_wallet.dart';
 
 class CreateNewWallet extends StatelessWidget {
-  const CreateNewWallet({super.key});
+  /// When true, this screen was opened from an already-unlocked dashboard to
+  /// add another wallet, so it saves the wallet directly instead of routing
+  /// through PIN setup (the PIN is already shared across all wallets).
+  final bool fromDashboard;
+
+  const CreateNewWallet({super.key, this.fromDashboard = false});
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +33,7 @@ class CreateNewWallet extends StatelessWidget {
                 if (state is CreateWalletLoading || state is CreateWalletInitial) {
                   return const _LoadingView();
                 } else if (state is CreateWalletSuccess) {
-                  return _SuccessView(wallet: state.wallet);
+                  return _SuccessView(wallet: state.wallet, fromDashboard: fromDashboard);
                 } else if (state is CreateWalletFailure) {
                   return _FailureView(message: state.message);
                 }
@@ -62,8 +68,32 @@ class _LoadingView extends StatelessWidget {
 
 class _SuccessView extends StatelessWidget {
   final Wallet wallet;
+  final bool fromDashboard;
 
-  const _SuccessView({required this.wallet});
+  const _SuccessView({required this.wallet, required this.fromDashboard});
+
+  Future<void> _saveAndReturn(BuildContext context) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+    try {
+      await sl<SaveWalletUseCase>()(wallet);
+      if (!context.mounted) return;
+      Navigator.of(context).pop();
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!context.mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to save wallet: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,9 +136,13 @@ class _SuccessView extends StatelessWidget {
           const SizedBox(height: 32),
           ElevatedButton(
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => SetPinScreen(wallet: wallet)),
-              );
+              if (fromDashboard) {
+                _saveAndReturn(context);
+              } else {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => SetPinScreen(wallet: wallet)),
+                );
+              }
             },
             child: const Text('Continue'),
           ),

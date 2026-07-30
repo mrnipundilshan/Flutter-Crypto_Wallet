@@ -9,10 +9,46 @@ class SecurityRepositoryImpl implements SecurityRepository {
   SecurityRepositoryImpl({required this.dataSource});
 
   @override
-  Future<void> saveWallet(Wallet wallet) async {
-    await dataSource.saveWallet(
-      WalletModel(mnemonic: wallet.mnemonic, seed: wallet.seed),
+  Future<Wallet> saveWallet(Wallet wallet) async {
+    final existing = await dataSource.getWallets();
+    final duplicateIndex = existing.indexWhere((w) => w.id == wallet.id);
+    final name = wallet.name.isNotEmpty
+        ? wallet.name
+        : duplicateIndex >= 0
+            ? existing[duplicateIndex].name
+            : 'Wallet ${existing.length + 1}';
+
+    final model = WalletModel(
+      id: wallet.id,
+      name: name,
+      mnemonic: wallet.mnemonic,
+      seed: wallet.seed,
     );
+    await dataSource.addWallet(model);
+    await dataSource.setActiveWalletId(model.id);
+    return model;
+  }
+
+  @override
+  Future<List<Wallet>> getWallets() async {
+    return await dataSource.getWallets();
+  }
+
+  @override
+  Future<Wallet?> getActiveWallet() async {
+    final wallets = await dataSource.getWallets();
+    if (wallets.isEmpty) return null;
+
+    final activeId = await dataSource.getActiveWalletId();
+    return wallets.firstWhere(
+      (w) => w.id == activeId,
+      orElse: () => wallets.first,
+    );
+  }
+
+  @override
+  Future<void> setActiveWallet(String walletId) async {
+    await dataSource.setActiveWalletId(walletId);
   }
 
   @override
@@ -21,8 +57,23 @@ class SecurityRepositoryImpl implements SecurityRepository {
   }
 
   @override
+  Future<bool> verifyPin(String pin) async {
+    return await dataSource.verifyPin(pin);
+  }
+
+  @override
+  Future<bool> hasPin() async {
+    return await dataSource.hasPin();
+  }
+
+  @override
   Future<bool> isBiometricAvailable() async {
     return await dataSource.isBiometricAvailable();
+  }
+
+  @override
+  Future<bool> isBiometricEnabled() async {
+    return await dataSource.isBiometricEnabled();
   }
 
   @override
@@ -32,5 +83,10 @@ class SecurityRepositoryImpl implements SecurityRepository {
       await dataSource.setBiometricEnabled(true);
     }
     return authenticated;
+  }
+
+  @override
+  Future<bool> unlockWithBiometric() async {
+    return await dataSource.authenticate();
   }
 }

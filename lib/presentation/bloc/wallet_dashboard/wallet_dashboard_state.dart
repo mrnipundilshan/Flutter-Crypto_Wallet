@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../../../domain/entities/asset.dart';
+import '../../../domain/entities/wallet.dart';
 
 abstract class WalletDashboardState extends Equatable {
   const WalletDashboardState();
@@ -12,13 +13,19 @@ class WalletDashboardLoading extends WalletDashboardState {}
 
 class WalletDashboardSuccess extends WalletDashboardState {
   final List<Asset> assets;
+  final Wallet activeWallet;
+  final List<Wallet> wallets;
 
-  const WalletDashboardSuccess(this.assets);
+  const WalletDashboardSuccess({
+    required this.assets,
+    required this.activeWallet,
+    required this.wallets,
+  });
 
   double get totalBalance => assets.fold(0, (sum, asset) => sum + asset.usdValue);
 
   @override
-  List<Object?> get props => [assets];
+  List<Object?> get props => [assets, activeWallet, wallets];
 }
 
 class WalletDashboardFailure extends WalletDashboardState {

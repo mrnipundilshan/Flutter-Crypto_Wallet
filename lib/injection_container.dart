@@ -13,19 +13,29 @@ import 'domain/repositories/wallet_repository.dart';
 import 'domain/usecases/check_biometric_availability.dart';
 import 'domain/usecases/create_wallet.dart';
 import 'domain/usecases/enable_biometric.dart';
+import 'domain/usecases/get_active_wallet.dart';
 import 'domain/usecases/get_assets.dart';
+import 'domain/usecases/get_wallets.dart';
+import 'domain/usecases/has_pin.dart';
 import 'domain/usecases/import_wallet.dart';
+import 'domain/usecases/is_biometric_enabled.dart';
 import 'domain/usecases/save_wallet.dart';
 import 'domain/usecases/set_pin.dart';
+import 'domain/usecases/switch_wallet.dart';
+import 'domain/usecases/unlock_with_biometric.dart';
+import 'domain/usecases/verify_pin.dart';
+import 'presentation/bloc/app_root/app_root_bloc.dart';
 import 'presentation/bloc/create_wallet/create_wallet_bloc.dart';
 import 'presentation/bloc/import_wallet/import_wallet_bloc.dart';
 import 'presentation/bloc/set_pin/set_pin_bloc.dart';
+import 'presentation/bloc/unlock/unlock_bloc.dart';
 import 'presentation/bloc/wallet_dashboard/wallet_dashboard_bloc.dart';
 
 final sl = GetIt.instance;
 
 Future<void> init() async {
   // Blocs
+  sl.registerFactory(() => AppRootBloc(hasPinUseCase: sl()));
   sl.registerFactory(() => CreateWalletBloc(createWalletUseCase: sl()));
   sl.registerFactory(() => ImportWalletBloc(importWalletUseCase: sl()));
   sl.registerFactory(() => SetPinBloc(
@@ -34,15 +44,32 @@ Future<void> init() async {
         setPinUseCase: sl(),
         enableBiometricUseCase: sl(),
       ));
-  sl.registerFactory(() => WalletDashboardBloc(getAssetsUseCase: sl()));
+  sl.registerFactory(() => WalletDashboardBloc(
+        getAssetsUseCase: sl(),
+        getWalletsUseCase: sl(),
+        getActiveWalletUseCase: sl(),
+        switchWalletUseCase: sl(),
+      ));
+  sl.registerFactory(() => UnlockBloc(
+        isBiometricEnabledUseCase: sl(),
+        verifyPinUseCase: sl(),
+        unlockWithBiometricUseCase: sl(),
+      ));
 
   // Use cases
   sl.registerLazySingleton(() => CreateWalletUseCase(sl()));
   sl.registerLazySingleton(() => ImportWalletUseCase(sl()));
   sl.registerLazySingleton(() => SaveWalletUseCase(sl()));
   sl.registerLazySingleton(() => SetPinUseCase(sl()));
+  sl.registerLazySingleton(() => VerifyPinUseCase(sl()));
+  sl.registerLazySingleton(() => HasPinUseCase(sl()));
+  sl.registerLazySingleton(() => GetWalletsUseCase(sl()));
+  sl.registerLazySingleton(() => GetActiveWalletUseCase(sl()));
+  sl.registerLazySingleton(() => SwitchWalletUseCase(sl()));
   sl.registerLazySingleton(() => CheckBiometricAvailabilityUseCase(sl()));
+  sl.registerLazySingleton(() => IsBiometricEnabledUseCase(sl()));
   sl.registerLazySingleton(() => EnableBiometricUseCase(sl()));
+  sl.registerLazySingleton(() => UnlockWithBiometricUseCase(sl()));
   sl.registerLazySingleton(() => GetAssetsUseCase(sl()));
 
   // Repositories

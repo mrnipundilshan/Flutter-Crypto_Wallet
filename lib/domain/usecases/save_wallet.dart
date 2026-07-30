@@ -6,7 +6,7 @@ class SaveWalletUseCase {
 
   SaveWalletUseCase(this.repository);
 
-  Future<void> call(Wallet wallet) async {
+  Future<Wallet> call(Wallet wallet) async {
     return await repository.saveWallet(wallet);
   }
 }
