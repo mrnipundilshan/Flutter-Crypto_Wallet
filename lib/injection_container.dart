@@ -14,6 +14,7 @@ import 'domain/repositories/security_repository.dart';
 import 'domain/repositories/transaction_repository.dart';
 import 'domain/repositories/wallet_repository.dart';
 import 'domain/usecases/check_biometric_availability.dart';
+import 'domain/usecases/clear_pin.dart';
 import 'domain/usecases/create_wallet.dart';
 import 'domain/usecases/delete_wallet.dart';
 import 'domain/usecases/enable_biometric.dart';
@@ -57,6 +58,7 @@ Future<void> init() async {
         getActiveWalletUseCase: sl(),
         switchWalletUseCase: sl(),
         deleteWalletUseCase: sl(),
+        clearPinUseCase: sl(),
       ));
   sl.registerFactory(() => UnlockBloc(
         isBiometricEnabledUseCase: sl(),
@@ -75,6 +77,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetActiveWalletUseCase(sl()));
   sl.registerLazySingleton(() => SwitchWalletUseCase(sl()));
   sl.registerLazySingleton(() => DeleteWalletUseCase(sl()));
+  sl.registerLazySingleton(() => ClearPinUseCase(sl()));
   sl.registerLazySingleton(() => CheckBiometricAvailabilityUseCase(sl()));
   sl.registerLazySingleton(() => IsBiometricEnabledUseCase(sl()));
   sl.registerLazySingleton(() => EnableBiometricUseCase(sl()));

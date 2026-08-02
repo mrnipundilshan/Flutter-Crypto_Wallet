@@ -72,6 +72,11 @@ class SecurityRepositoryImpl implements SecurityRepository {
   }
 
   @override
+  Future<void> clearPin() async {
+    await dataSource.clearPin();
+  }
+
+  @override
   Future<bool> isBiometricAvailable() async {
     return await dataSource.isBiometricAvailable();
   }

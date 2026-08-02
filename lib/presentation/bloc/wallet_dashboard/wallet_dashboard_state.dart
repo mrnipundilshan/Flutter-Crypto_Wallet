@@ -11,6 +11,10 @@ abstract class WalletDashboardState extends Equatable {
 
 class WalletDashboardLoading extends WalletDashboardState {}
 
+/// Every wallet on this device has been removed; the UI should return to
+/// onboarding so the user can create or import a wallet to continue.
+class WalletDashboardEmpty extends WalletDashboardState {}
+
 class WalletDashboardSuccess extends WalletDashboardState {
   final List<Asset> assets;
   final Wallet activeWallet;

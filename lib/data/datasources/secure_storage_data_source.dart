@@ -17,6 +17,7 @@ abstract class SecureStorageDataSource {
   Future<void> savePin(String pin);
   Future<bool> verifyPin(String pin);
   Future<bool> hasPin();
+  Future<void> clearPin();
   Future<bool> isBiometricAvailable();
   Future<bool> authenticate();
   Future<void> setBiometricEnabled(bool enabled);
@@ -107,6 +108,13 @@ class SecureStorageDataSourceImpl implements SecureStorageDataSource {
   Future<bool> hasPin() async {
     final storedHash = await secureStorage.read(key: _pinHashKey);
     return storedHash != null && storedHash.isNotEmpty;
+  }
+
+  @override
+  Future<void> clearPin() async {
+    await secureStorage.delete(key: _pinHashKey);
+    await secureStorage.delete(key: _pinSaltKey);
+    await secureStorage.delete(key: _biometricEnabledKey);
   }
 
   @override

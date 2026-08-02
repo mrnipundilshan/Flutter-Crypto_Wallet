@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../domain/usecases/clear_pin.dart';
 import '../../../domain/usecases/delete_wallet.dart';
 import '../../../domain/usecases/get_active_wallet.dart';
 import '../../../domain/usecases/get_assets.dart';
@@ -13,6 +14,7 @@ class WalletDashboardBloc extends Bloc<WalletDashboardEvent, WalletDashboardStat
   final GetActiveWalletUseCase getActiveWalletUseCase;
   final SwitchWalletUseCase switchWalletUseCase;
   final DeleteWalletUseCase deleteWalletUseCase;
+  final ClearPinUseCase clearPinUseCase;
 
   WalletDashboardBloc({
     required this.getAssetsUseCase,
@@ -20,6 +22,7 @@ class WalletDashboardBloc extends Bloc<WalletDashboardEvent, WalletDashboardStat
     required this.getActiveWalletUseCase,
     required this.switchWalletUseCase,
     required this.deleteWalletUseCase,
+    required this.clearPinUseCase,
   }) : super(WalletDashboardLoading()) {
     on<WalletDashboardRequested>(_onWalletDashboardRequested);
     on<WalletSwitched>(_onWalletSwitched);
@@ -54,6 +57,12 @@ class WalletDashboardBloc extends Bloc<WalletDashboardEvent, WalletDashboardStat
     emit(WalletDashboardLoading());
     try {
       await deleteWalletUseCase(event.walletId);
+      final remaining = await getWalletsUseCase();
+      if (remaining.isEmpty) {
+        await clearPinUseCase();
+        emit(WalletDashboardEmpty());
+        return;
+      }
       await _loadDashboard(emit);
     } catch (e) {
       emit(WalletDashboardFailure(e.toString()));

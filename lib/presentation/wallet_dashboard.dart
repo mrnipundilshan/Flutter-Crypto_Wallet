@@ -7,6 +7,7 @@ import 'bloc/wallet_dashboard/wallet_dashboard_event.dart';
 import 'bloc/wallet_dashboard/wallet_dashboard_state.dart';
 import 'create_new_wallet.dart';
 import 'import_wallet.dart';
+import 'onboarding_screen.dart';
 import 'send/send_select_asset_screen.dart';
 import 'widgets/asset_tile.dart';
 import 'widgets/balance_card.dart';
@@ -21,27 +22,36 @@ class WalletDashboard extends StatelessWidget {
       create: (_) => sl<WalletDashboardBloc>()..add(WalletDashboardRequested()),
       child: Builder(
         builder: (context) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('My Wallet'),
-              actions: [
-                IconButton(
-                  tooltip: 'Switch wallet',
-                  icon: const Icon(Icons.account_balance_wallet_outlined),
-                  onPressed: () => _showWalletSwitcher(context),
+          return BlocListener<WalletDashboardBloc, WalletDashboardState>(
+            listenWhen: (previous, current) => current is WalletDashboardEmpty,
+            listener: (context, state) {
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+                (route) => false,
+              );
+            },
+            child: Scaffold(
+              appBar: AppBar(
+                title: const Text('My Wallet'),
+                actions: [
+                  IconButton(
+                    tooltip: 'Switch wallet',
+                    icon: const Icon(Icons.account_balance_wallet_outlined),
+                    onPressed: () => _showWalletSwitcher(context),
+                  ),
+                ],
+              ),
+              body: SafeArea(
+                child: BlocBuilder<WalletDashboardBloc, WalletDashboardState>(
+                  builder: (context, state) {
+                    if (state is WalletDashboardSuccess) {
+                      return _DashboardView(state: state);
+                    } else if (state is WalletDashboardFailure) {
+                      return _FailureView(message: state.message);
+                    }
+                    return const Center(child: CircularProgressIndicator());
+                  },
                 ),
-              ],
-            ),
-            body: SafeArea(
-              child: BlocBuilder<WalletDashboardBloc, WalletDashboardState>(
-                builder: (context, state) {
-                  if (state is WalletDashboardSuccess) {
-                    return _DashboardView(state: state);
-                  } else if (state is WalletDashboardFailure) {
-                    return _FailureView(message: state.message);
-                  }
-                  return const Center(child: CircularProgressIndicator());
-                },
               ),
             ),
           );
@@ -70,14 +80,15 @@ void _showWalletSwitcher(BuildContext context) {
               bloc.add(WalletDashboardRequested());
             }
           },
-          onRemoveWallet: (wallet) async {
+          onRemoveWallet: (wallet, isLastWallet) async {
             final confirmed = await showDialog<bool>(
               context: sheetContext,
               builder: (dialogContext) => AlertDialog(
                 title: const Text('Remove wallet?'),
                 content: Text(
                   'This will permanently delete "${wallet.name}" from this device. '
-                  'Make sure you have backed up its recovery phrase before continuing.',
+                  'Make sure you have backed up its recovery phrase before continuing.'
+                  '${isLastWallet ? '\n\nThis is your only wallet — removing it will return you to the start screen.' : ''}',
                 ),
                 actions: [
                   TextButton(
@@ -108,7 +119,7 @@ void _showWalletSwitcher(BuildContext context) {
 
 class _WalletSwitcherSheet extends StatelessWidget {
   final void Function(Widget screen) onAddWallet;
-  final void Function(Wallet wallet) onRemoveWallet;
+  final void Function(Wallet wallet, bool isLastWallet) onRemoveWallet;
 
   const _WalletSwitcherSheet({required this.onAddWallet, required this.onRemoveWallet});
 
@@ -139,11 +150,9 @@ class _WalletSwitcherSheet extends StatelessWidget {
                     ),
                     title: Text(wallet.name),
                     trailing: IconButton(
-                      tooltip: wallets.length > 1
-                          ? 'Remove wallet'
-                          : 'At least one wallet must remain',
+                      tooltip: 'Remove wallet',
                       icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error),
-                      onPressed: wallets.length > 1 ? () => onRemoveWallet(wallet) : null,
+                      onPressed: () => onRemoveWallet(wallet, wallets.length == 1),
                     ),
                     onTap: () {
                       if (wallet.id != activeId) {

@@ -29,6 +29,10 @@ abstract class SecurityRepository {
   /// Whether a PIN has already been set up on this device.
   Future<bool> hasPin();
 
+  /// Erases the stored PIN and biometric opt-in. Used when the device is
+  /// left with no wallets, so the next launch starts fresh at onboarding.
+  Future<void> clearPin();
+
   /// Whether the device has biometric hardware enrolled and ready to use.
   Future<bool> isBiometricAvailable();
 
