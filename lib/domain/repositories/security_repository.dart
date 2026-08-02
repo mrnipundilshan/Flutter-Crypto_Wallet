@@ -9,6 +9,10 @@ abstract class SecurityRepository {
   /// All wallets saved on this device.
   Future<List<Wallet>> getWallets();
 
+  /// Permanently removes the wallet with [walletId] from secure storage.
+  /// If it was the active wallet, another remaining wallet becomes active.
+  Future<void> deleteWallet(String walletId);
+
   /// The wallet currently selected for use in the dashboard.
   Future<Wallet?> getActiveWallet();
 

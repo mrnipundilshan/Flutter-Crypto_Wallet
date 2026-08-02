@@ -35,6 +35,11 @@ class SecurityRepositoryImpl implements SecurityRepository {
   }
 
   @override
+  Future<void> deleteWallet(String walletId) async {
+    await dataSource.deleteWallet(walletId);
+  }
+
+  @override
   Future<Wallet?> getActiveWallet() async {
     final wallets = await dataSource.getWallets();
     if (wallets.isEmpty) return null;

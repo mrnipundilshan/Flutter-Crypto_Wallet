@@ -11,6 +11,7 @@ import '../models/wallet_model.dart';
 abstract class SecureStorageDataSource {
   Future<void> addWallet(WalletModel wallet);
   Future<List<WalletModel>> getWallets();
+  Future<void> deleteWallet(String id);
   Future<void> setActiveWalletId(String id);
   Future<String?> getActiveWalletId();
   Future<void> savePin(String pin);
@@ -57,6 +58,23 @@ class SecureStorageDataSourceImpl implements SecureStorageDataSource {
     if (raw == null || raw.isEmpty) return [];
     final list = jsonDecode(raw) as List;
     return list.map((e) => WalletModel.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  @override
+  Future<void> deleteWallet(String id) async {
+    final wallets = await getWallets();
+    wallets.removeWhere((w) => w.id == id);
+    final json = jsonEncode(wallets.map((w) => w.toJson()).toList());
+    await secureStorage.write(key: _walletsKey, value: json);
+
+    final activeId = await getActiveWalletId();
+    if (activeId == id) {
+      if (wallets.isNotEmpty) {
+        await setActiveWalletId(wallets.first.id);
+      } else {
+        await secureStorage.delete(key: _activeWalletIdKey);
+      }
+    }
   }
 
   @override

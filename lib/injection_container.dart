@@ -3,16 +3,21 @@ import 'package:get_it/get_it.dart';
 import 'package:local_auth/local_auth.dart';
 import 'data/datasources/asset_local_data_source.dart';
 import 'data/datasources/secure_storage_data_source.dart';
+import 'data/datasources/transaction_local_data_source.dart';
 import 'data/datasources/wallet_local_data_source.dart';
 import 'data/repositories/asset_repository_impl.dart';
 import 'data/repositories/security_repository_impl.dart';
+import 'data/repositories/transaction_repository_impl.dart';
 import 'data/repositories/wallet_repository_impl.dart';
 import 'domain/repositories/asset_repository.dart';
 import 'domain/repositories/security_repository.dart';
+import 'domain/repositories/transaction_repository.dart';
 import 'domain/repositories/wallet_repository.dart';
 import 'domain/usecases/check_biometric_availability.dart';
 import 'domain/usecases/create_wallet.dart';
+import 'domain/usecases/delete_wallet.dart';
 import 'domain/usecases/enable_biometric.dart';
+import 'domain/usecases/estimate_gas_fee.dart';
 import 'domain/usecases/get_active_wallet.dart';
 import 'domain/usecases/get_assets.dart';
 import 'domain/usecases/get_wallets.dart';
@@ -20,9 +25,11 @@ import 'domain/usecases/has_pin.dart';
 import 'domain/usecases/import_wallet.dart';
 import 'domain/usecases/is_biometric_enabled.dart';
 import 'domain/usecases/save_wallet.dart';
+import 'domain/usecases/send_asset.dart';
 import 'domain/usecases/set_pin.dart';
 import 'domain/usecases/switch_wallet.dart';
 import 'domain/usecases/unlock_with_biometric.dart';
+import 'domain/usecases/validate_recipient_address.dart';
 import 'domain/usecases/verify_pin.dart';
 import 'presentation/bloc/app_root/app_root_bloc.dart';
 import 'presentation/bloc/create_wallet/create_wallet_bloc.dart';
@@ -49,6 +56,7 @@ Future<void> init() async {
         getWalletsUseCase: sl(),
         getActiveWalletUseCase: sl(),
         switchWalletUseCase: sl(),
+        deleteWalletUseCase: sl(),
       ));
   sl.registerFactory(() => UnlockBloc(
         isBiometricEnabledUseCase: sl(),
@@ -66,11 +74,15 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetWalletsUseCase(sl()));
   sl.registerLazySingleton(() => GetActiveWalletUseCase(sl()));
   sl.registerLazySingleton(() => SwitchWalletUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteWalletUseCase(sl()));
   sl.registerLazySingleton(() => CheckBiometricAvailabilityUseCase(sl()));
   sl.registerLazySingleton(() => IsBiometricEnabledUseCase(sl()));
   sl.registerLazySingleton(() => EnableBiometricUseCase(sl()));
   sl.registerLazySingleton(() => UnlockWithBiometricUseCase(sl()));
   sl.registerLazySingleton(() => GetAssetsUseCase(sl()));
+  sl.registerLazySingleton(() => ValidateRecipientAddressUseCase(sl()));
+  sl.registerLazySingleton(() => EstimateGasFeeUseCase(sl()));
+  sl.registerLazySingleton(() => SendAssetUseCase(sl()));
 
   // Repositories
   sl.registerLazySingleton<WalletRepository>(
@@ -81,6 +93,9 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<AssetRepository>(
     () => AssetRepositoryImpl(localDataSource: sl()),
+  );
+  sl.registerLazySingleton<TransactionRepository>(
+    () => TransactionRepositoryImpl(localDataSource: sl()),
   );
 
   // Data sources
@@ -95,6 +110,9 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<AssetLocalDataSource>(
     () => AssetLocalDataSourceImpl(),
+  );
+  sl.registerLazySingleton<TransactionLocalDataSource>(
+    () => TransactionLocalDataSourceImpl(),
   );
 
   // External

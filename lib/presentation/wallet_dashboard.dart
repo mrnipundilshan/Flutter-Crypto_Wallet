@@ -7,6 +7,7 @@ import 'bloc/wallet_dashboard/wallet_dashboard_event.dart';
 import 'bloc/wallet_dashboard/wallet_dashboard_state.dart';
 import 'create_new_wallet.dart';
 import 'import_wallet.dart';
+import 'send/send_select_asset_screen.dart';
 import 'widgets/asset_tile.dart';
 import 'widgets/balance_card.dart';
 import '../core/theme/app_colors.dart';
@@ -69,6 +70,36 @@ void _showWalletSwitcher(BuildContext context) {
               bloc.add(WalletDashboardRequested());
             }
           },
+          onRemoveWallet: (wallet) async {
+            final confirmed = await showDialog<bool>(
+              context: sheetContext,
+              builder: (dialogContext) => AlertDialog(
+                title: const Text('Remove wallet?'),
+                content: Text(
+                  'This will permanently delete "${wallet.name}" from this device. '
+                  'Make sure you have backed up its recovery phrase before continuing.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext, false),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext, true),
+                    child: const Text('Remove'),
+                  ),
+                ],
+              ),
+            );
+            if (confirmed != true || !sheetContext.mounted) return;
+
+            Navigator.pop(sheetContext);
+            bloc.add(WalletRemoved(wallet.id));
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('"${wallet.name}" was removed.')),
+            );
+          },
         ),
       );
     },
@@ -77,8 +108,9 @@ void _showWalletSwitcher(BuildContext context) {
 
 class _WalletSwitcherSheet extends StatelessWidget {
   final void Function(Widget screen) onAddWallet;
+  final void Function(Wallet wallet) onRemoveWallet;
 
-  const _WalletSwitcherSheet({required this.onAddWallet});
+  const _WalletSwitcherSheet({required this.onAddWallet, required this.onRemoveWallet});
 
   @override
   Widget build(BuildContext context) {
@@ -106,6 +138,13 @@ class _WalletSwitcherSheet extends StatelessWidget {
                       color: AppColors.primary,
                     ),
                     title: Text(wallet.name),
+                    trailing: IconButton(
+                      tooltip: wallets.length > 1
+                          ? 'Remove wallet'
+                          : 'At least one wallet must remain',
+                      icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error),
+                      onPressed: wallets.length > 1 ? () => onRemoveWallet(wallet) : null,
+                    ),
                     onTap: () {
                       if (wallet.id != activeId) {
                         context.read<WalletDashboardBloc>().add(WalletSwitched(wallet.id));
@@ -151,6 +190,18 @@ class _DashboardView extends StatelessWidget {
           Text(state.activeWallet.name, style: theme.textTheme.titleMedium),
           const SizedBox(height: 12),
           BalanceCard(totalUsdValue: state.totalBalance),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => SendSelectAssetScreen(assets: state.assets),
+                ),
+              );
+            },
+            icon: const Icon(Icons.arrow_upward_rounded),
+            label: const Text('Send'),
+          ),
           const SizedBox(height: 24),
           Text('Assets', style: theme.textTheme.titleLarge),
           const SizedBox(height: 12),

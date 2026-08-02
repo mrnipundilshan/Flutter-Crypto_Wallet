@@ -17,3 +17,12 @@ class WalletSwitched extends WalletDashboardEvent {
   @override
   List<Object?> get props => [walletId];
 }
+
+class WalletRemoved extends WalletDashboardEvent {
+  final String walletId;
+
+  const WalletRemoved(this.walletId);
+
+  @override
+  List<Object?> get props => [walletId];
+}

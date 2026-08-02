@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../domain/usecases/delete_wallet.dart';
 import '../../../domain/usecases/get_active_wallet.dart';
 import '../../../domain/usecases/get_assets.dart';
 import '../../../domain/usecases/get_wallets.dart';
@@ -11,15 +12,18 @@ class WalletDashboardBloc extends Bloc<WalletDashboardEvent, WalletDashboardStat
   final GetWalletsUseCase getWalletsUseCase;
   final GetActiveWalletUseCase getActiveWalletUseCase;
   final SwitchWalletUseCase switchWalletUseCase;
+  final DeleteWalletUseCase deleteWalletUseCase;
 
   WalletDashboardBloc({
     required this.getAssetsUseCase,
     required this.getWalletsUseCase,
     required this.getActiveWalletUseCase,
     required this.switchWalletUseCase,
+    required this.deleteWalletUseCase,
   }) : super(WalletDashboardLoading()) {
     on<WalletDashboardRequested>(_onWalletDashboardRequested);
     on<WalletSwitched>(_onWalletSwitched);
+    on<WalletRemoved>(_onWalletRemoved);
   }
 
   Future<void> _onWalletDashboardRequested(
@@ -37,6 +41,19 @@ class WalletDashboardBloc extends Bloc<WalletDashboardEvent, WalletDashboardStat
     emit(WalletDashboardLoading());
     try {
       await switchWalletUseCase(event.walletId);
+      await _loadDashboard(emit);
+    } catch (e) {
+      emit(WalletDashboardFailure(e.toString()));
+    }
+  }
+
+  Future<void> _onWalletRemoved(
+    WalletRemoved event,
+    Emitter<WalletDashboardState> emit,
+  ) async {
+    emit(WalletDashboardLoading());
+    try {
+      await deleteWalletUseCase(event.walletId);
       await _loadDashboard(emit);
     } catch (e) {
       emit(WalletDashboardFailure(e.toString()));
